@@ -8,7 +8,7 @@
   --lilac:#ece2fd; --mint:#dcf3e8; --peach:#ffe5d6; --butter:#fff2c7;
   --ok:#3c8a68; --ok-soft:#dcf3e8; --warn:#b26a1f; --warn-soft:#ffecd6;
   --cover-ink:#4b2a3a;
-  --c1:#e4d4fb; --c2:#fcd0de; --c3:#ffd9c7; --c4:#fff0b8; --c5:#cfe9f7; --c6:#d3efdf; --c7:#f3dcef; --c8:#f9c9c9; --c9:#d9dcfa; --c10:#e9e1d3;
+  --c1:#e4d4fb; --c2:#fcd0de; --c3:#ffd9c7; --c4:#fff0b8; --c5:#cfe9f7; --c6:#d3efdf; --c7:#f3dcef; --c8:#f9c9c9; --c9:#d9dcfa; --c10:#e9e1d3; --c11:#ffd6a5; --c12:#bde8e4; --c13:#cfe8b4; --c14:#f6c6e6; --c15:#f2e6a0;
   --script:"Dancing Script", "Brush Script MT", cursive; --serif:"Playfair Display", Georgia, serif; --body:"Quicksand", "Nunito", system-ui, sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -142,6 +142,20 @@ dialog.ficha::backdrop{background:rgba(60,20,40,.35);backdrop-filter:blur(3px)}
 .seg button[aria-pressed="true"]{background:var(--rose);color:var(--surface)}
 @media (max-width:720px){.ficha-in{grid-template-columns:1fr;padding:20px}.ficha-in .cover{width:140px;margin:0 auto}.ficha h3{font-size:23px}}
 
+.tabs{display:flex;justify-content:center;gap:6px;background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:5px;width:max-content;max-width:100%;margin:0 auto}
+.tabs button{border:0;background:transparent;border-radius:999px;padding:9px 22px;font-weight:700;font-size:15px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--rose);color:var(--surface)}
+.view{display:flex;flex-direction:column;gap:40px}
+.view[hidden]{display:none}
+.series{display:flex;flex-wrap:wrap;gap:8px}
+.series span{background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;font-weight:700}
+.series b{color:var(--rose);margin-left:4px}
+.mine{font-size:12px;color:var(--rose);font-weight:700;white-space:nowrap}
+.mine.none{color:var(--muted);font-weight:600}
+.tag.shelf{color:var(--ok)}
+.lidos-hero{background:linear-gradient(135deg,var(--mint),var(--lilac));border-radius:28px;padding:24px;display:flex;flex-direction:column;gap:6px}
+.lidos-hero .big{font-family:var(--serif);font-size:clamp(34px,8vw,52px);line-height:1.05}
+.lidos-hero p{margin:0;color:var(--muted)}
 @media (max-width:720px){
   .raffle{grid-template-columns:1fr;padding:20px}
   .stage{order:-1}
@@ -162,6 +176,12 @@ dialog.ficha::backdrop{background:rgba(60,20,40,.35);backdrop-filter:blur(3px)}
     <div class="acct" id="acct"><button class="btn-soft" id="btn-login">Entrar com Google para sincronizar</button></div>
   </header>
 
+  <div class="tabs" role="tablist" aria-label="Seções">
+    <button role="tab" id="tab-estante" aria-controls="view-estante" aria-selected="true">Minha estante</button>
+    <button role="tab" id="tab-lidos" aria-controls="view-lidos" aria-selected="false">Lidos</button>
+  </div>
+
+  <div class="view" id="view-estante" role="tabpanel" aria-labelledby="tab-estante">
   <section class="raffle" aria-labelledby="h-sorteio">
     <div class="controls">
       <h2 id="h-sorteio">Qual é o próximo?</h2>
@@ -209,8 +229,43 @@ dialog.ficha::backdrop{background:rgba(60,20,40,.35);backdrop-filter:blur(3px)}
     <div class="grid" id="grid"></div>
     <p class="note" id="note">Toque na capa para ver a sinopse e a nota dos leitores. Toque na situação de um livro para alternar entre não lido, lendo e lido. As notas são a média dos leitores no Goodreads, de 0 a 5. As páginas são de edições brasileiras e podem variar um pouco na sua. As capas são de edições brasileiras e podem ser diferentes da sua. Para usar uma foto sua, passe o dedo ou o mouse sobre o livro e toque em “Trocar capa”. Tudo fica salvo neste aparelho e neste navegador.</p>
     <input type="file" id="file" accept="image/*" hidden>
-    <dialog class="ficha" id="ficha" aria-labelledby="f-title"></dialog>
   </section>
+  </div>
+
+  <div class="view" id="view-lidos" role="tabpanel" aria-labelledby="tab-lidos" hidden>
+    <section class="lidos-hero" aria-labelledby="h-lidos">
+      <div class="eyebrow">Tudo o que eu já li</div>
+      <h2 id="h-lidos" class="big"><span class="num" id="lh-n"></span> livros e <span class="num" id="lh-p"></span> páginas</h2>
+      <p id="lh-sub"></p>
+    </section>
+    <section aria-labelledby="h-lnum">
+      <h2 id="h-lnum">Em números</h2>
+      <div class="tiles" id="l-tiles" style="margin-top:14px"></div>
+      <div class="charts">
+        <div class="chart"><h3>Gêneros que eu mais li</h3><div class="bars" id="l-genres"></div></div>
+        <div class="chart"><h3>Autores mais lidos</h3><div class="bars" id="l-authors"></div></div>
+        <div class="chart"><h3>As notas que eu dei</h3><div class="hist" id="l-notas"></div><div class="hist-labels" id="l-notas-labels"></div><div class="extremes" id="l-notas-info"></div></div>
+        <div class="chart"><h3>Tamanho dos livros lidos</h3><div class="hist" id="l-hist"></div><div class="hist-labels" id="l-hist-labels"></div><div class="extremes" id="l-extremes"></div></div>
+      </div>
+      <div class="chart" style="margin-top:16px"><h3>Sagas e séries</h3><div class="series" id="l-series"></div></div>
+    </section>
+    <section aria-labelledby="h-llista">
+      <div class="sec-head"><h2 id="h-llista">Meus lidos</h2></div>
+      <div class="listbar">
+        <label class="field">Buscar<input id="lq" type="search" placeholder="Título, autor ou saga"></label>
+        <label class="field">Gênero<select id="ll-genero"></select></label>
+        <label class="field">Minha nota<select id="ll-nota">
+          <option value="">Todas</option><option value="5">5 estrelas</option><option value="4">4 ou mais</option><option value="-3">Até 3</option><option value="0">Sem nota</option>
+        </select></label>
+        <label class="field">Ordenar<select id="ll-ordem">
+          <option value="i">Ordem do Skoob</option><option value="i-">Ordem do Skoob, invertida</option><option value="t">Título</option><option value="a">Autor</option><option value="r">Minha nota</option><option value="p-">Mais páginas</option><option value="p+">Menos páginas</option>
+        </select></label>
+      </div>
+      <div class="grid" id="l-grid"></div>
+      <p class="note">Esta lista veio da minha estante de lidos do Skoob e é separada da estante física: muitos destes livros eu não tenho. As notas são as estrelas que eu dei no Skoob. Os livros da estante física que eu marcar como lidos entram aqui também. Gênero e páginas são aproximados, de edições brasileiras.</p>
+    </section>
+  </div>
+  <dialog class="ficha" id="ficha" aria-labelledby="f-title"></dialog>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -451,7 +506,7 @@ $("#grid").addEventListener("click",e=>{
 });
 ["#q","#l-genero","#l-status","#l-ordem"].forEach(s=>$(s).addEventListener("input",renderGrid));
 
-function renderAll(){renderRaffle();renderStats();renderGrid(); if(lastPick!=null&&!spinning) $("#stage").innerHTML=coverHTML(byN(lastPick));}
+function renderAll(){renderRaffle();renderStats();renderGrid();if(typeof renderLidos==='function')renderLidos(); if(lastPick!=null&&!spinning) $("#stage").innerHTML=coverHTML(byN(lastPick));}
 
 // Foto da capa: reduz no navegador e guarda neste aparelho
 async function shrink(file){
@@ -461,6 +516,103 @@ async function shrink(file){
   c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
   return c.toDataURL("image/jpeg",.8);
 }
+const LIDOS = [["Anne da Ilha","L. M. Montgomery",null,"Clássico",288,"Anne de Green Gables, vol. 3"],["Desencontros à beira-mar","Jill Mansell",null,"Romance contemporâneo",416,""],["Graça fatal","Louise Penny",null,"Mistério policial",400,"Inspetor Gamache, vol. 2"],["Como ficar podre de rico na Ásia emergente","Mohsin Hamid",null,"Ficção literária",208,""],["Daisy Jones & The Six","Taylor Jenkins Reid",null,"Ficção literária",360,""],["Sombra e ossos","Leigh Bardugo",null,"Fantasia",256,"Grishaverso"],["A hipótese do amor","Ali Hazelwood",null,"Romance contemporâneo",336,""],["The Witcher: Batismo de fogo","Andrzej Sapkowski",null,"Fantasia",384,"The Witcher, vol. 5"],["Separados pelo Holocausto","Monica Hesse",null,"Ficção histórica",384,""],["A rainha vermelha","Victoria Aveyard",null,"Jovem adulto",424,"A rainha vermelha, vol. 1"],["Anne de Avonlea","L. M. Montgomery",null,"Clássico",272,"Anne de Green Gables, vol. 2"],["Nunca saia sozinho","Charlie Donlea",4.5,"Suspense e thriller",352,""],["O que resta de nós","Virginie Grimaldi",4.0,"Ficção literária",320,""],["Se liga, Dani Brown","Talia Hibbert",2.5,"Romance contemporâneo",368,"Irmãs Brown, vol. 2"],["O mais cruel dos meses","Louise Penny",3.0,"Mistério policial",432,"Inspetor Gamache, vol. 3"],["Gente ansiosa","Fredrik Backman",5.0,"Ficção literária",368,""],["Mindhunter","John Douglas e Mark Olshaker",4.0,"True crime",384,""],["Onde mora o amor","Jill Mansell",null,"Romance contemporâneo",432,""],["Fogo & sangue","George R. R. Martin",4.0,"Fantasia",656,""],["Finlay Donovan: sem tempo para matar","Elle Cosimano",null,"Suspense e thriller",352,"Finlay Donovan, vol. 2"],["Anne de Green Gables","L. M. Montgomery",null,"Clássico",320,"Anne de Green Gables, vol. 1"],["O telefone preto e outras histórias","Joe Hill",null,"Terror",416,""],["Jantar secreto","Raphael Montes",4.5,"Suspense e thriller",368,""],["Verity","Colleen Hoover",4.5,"Suspense e thriller",320,""],["A paciente silenciosa","Alex Michaelides",3.5,"Suspense e thriller",352,""],["The Witcher: Tempo do desprezo","Andrzej Sapkowski",4.0,"Fantasia",352,"The Witcher, vol. 4"],["Oração para desaparecer","Socorro Acioli",3.5,"Ficção literária",192,""],["Uma segunda chance","Colleen Hoover",5.0,"Romance contemporâneo",336,""],["Uma questão de química","Bonnie Garmus",4.0,"Ficção histórica",400,""],["Quem era ela","JP Delaney",4.0,"Suspense e thriller",368,""],["Casa de céu e sopro","Sarah J. Maas",3.5,"Fantasia",816,"Cidade da Lua Crescente, vol. 2"],["Casa de terra e sangue","Sarah J. Maas",4.5,"Fantasia",800,"Cidade da Lua Crescente, vol. 1"],["O farol","Emma Stonex",3.0,"Suspense e thriller",352,""],["A dança da morte","Stephen King",5.0,"Terror",1248,""],["Os delírios de Natal de Becky Bloom","Sophie Kinsella",3.0,"Romance contemporâneo",432,"Becky Bloom"],["Nevasca","Dhonielle Clayton, Tiffany D. Jackson, Nic Stone, Angie Thomas, Ashley Woodfolk e Nicola Yoon",2.0,"Jovem adulto",304,""],["Um Natal no campo","Louisa May Alcott",3.0,"Clássico",96,""],["Oito horas perfeitas","Lia Louis",3.0,"Romance contemporâneo",336,""],["Sal e açúcar","Rebecca Carvalho",5.0,"Jovem adulto",320,""],["The Witcher: O sangue dos elfos","Andrzej Sapkowski",4.0,"Fantasia",320,"The Witcher, vol. 3"],["O amor não tem nome","Lauren Kate",2.5,"Romance contemporâneo",320,""],["Mr. Mercedes","Stephen King",5.0,"Suspense e thriller",416,"Trilogia Bill Hodges, vol. 1"],["Redimida","P.C. Cast e Kristin Cast",4.0,"Jovem adulto",352,"House of Night, vol. 12"],["The Witcher: A espada do destino","Andrzej Sapkowski",5.0,"Fantasia",400,"The Witcher, vol. 2"],["Em busca de mim","Viola Davis",5.0,"Não ficção",320,"Memórias"],["Os números do amor","Helen Hoang",3.0,"Romance contemporâneo",320,""],["Americanah","Chimamanda Ngozi Adichie",5.0,"Ficção literária",520,""],["Glória da manhã","LaVyrle Spencer",4.0,"Romance de época",448,""],["Libertação","Imogen Kealey",5.0,"Ficção histórica",384,""],["Finlay Donovan: uma escritora de matar","Elle Cosimano",3.0,"Suspense e thriller",352,"Finlay Donovan, vol. 1"],["Indesejadas","Kristina Ohlsson",5.0,"Mistério policial",400,"Fredrika Bergman, vol. 1"],["Tarde demais","Colleen Hoover",0.5,"Suspense e thriller",352,""],["The Witcher: O último desejo","Andrzej Sapkowski",5.0,"Fantasia",320,"The Witcher, vol. 1"],["Tudo pode mudar","Jill Mansell",3.0,"Romance contemporâneo",432,""],["Caraval","Stephanie Garber",4.0,"Fantasia",368,"Caraval, vol. 1"],["É assim que começa","Colleen Hoover",4.0,"Romance contemporâneo",368,""],["É assim que acaba","Colleen Hoover",5.0,"Romance contemporâneo",368,""],["Operação família","Sarah Morgan",5.0,"Romance contemporâneo",384,""],["A vida pela frente","Émile Ajar (Romain Gary)",null,"Ficção literária",192,""],["Natureza morta","Louise Penny",4.5,"Mistério policial",352,"Inspetor Gamache, vol. 1"],["A família perfeita","Lisa Jewell",3.5,"Suspense e thriller",352,""],["Um de nós é o próximo","Karen M. McManus",4.0,"Jovem adulto",384,"Um de nós está mentindo, vol. 2"],["Tempo de reacender estrelas","Virginie Grimaldi",4.0,"Ficção literária",336,""],["Um de nós está mentindo","Karen M. McManus",3.5,"Jovem adulto",384,"Um de nós está mentindo, vol. 1"],["O impulso","Ashley Audrain",5.0,"Suspense e thriller",320,""],["Noite sem fim","Agatha Christie",4.0,"Mistério policial",224,""],["It: a coisa","Stephen King",4.0,"Terror",1104,""],["Imperfeitos","Christina Lauren",2.5,"Romance contemporâneo",336,""],["Ted Bundy: um estranho ao meu lado","Ann Rule",4.0,"True crime",592,""],["Manson","Jeff Guinn",3.5,"True crime",512,"Biografia"],["Casos de família","Ilana Casoy",4.0,"True crime",496,""],["As desolações do Recanto do Demônio","Ransom Riggs",5.0,"Fantasia",464,"O lar da srta. Peregrine, vol. 6"],["Corte de chamas prateadas","Sarah J. Maas",5.0,"Fantasia",784,"Corte de espinhos e rosas, vol. 5"],["Corte de gelo e estrelas","Sarah J. Maas",5.0,"Fantasia",208,"Corte de espinhos e rosas, vol. 4"],["Corte de asas e ruína","Sarah J. Maas",3.0,"Fantasia",704,"Corte de espinhos e rosas, vol. 3"],["Corte de névoa e fúria","Sarah J. Maas",5.0,"Fantasia",656,"Corte de espinhos e rosas, vol. 2"],["Corte de espinhos e rosas","Sarah J. Maas",5.0,"Fantasia",434,"Corte de espinhos e rosas, vol. 1"],["E viveram felizes para sempre","Julia Quinn",4.0,"Romance de época",352,"Os Bridgertons, vol. 9"],["A caminho do altar","Julia Quinn",5.0,"Romance de época",320,"Os Bridgertons, vol. 8"],["Um beijo inesquecível","Julia Quinn",3.5,"Romance de época",320,"Os Bridgertons, vol. 7"],["O conde enfeitiçado","Julia Quinn",3.0,"Romance de época",320,"Os Bridgertons, vol. 6"],["Para Sir Phillip, com amor","Julia Quinn",5.0,"Romance de época",304,"Os Bridgertons, vol. 5"],["Os segredos de Colin Bridgerton","Julia Quinn",3.5,"Romance de época",320,"Os Bridgertons, vol. 4"],["Um perfeito cavalheiro","Julia Quinn",4.0,"Romance de época",320,"Os Bridgertons, vol. 3"],["O visconde que me amava","Julia Quinn",3.0,"Romance de época",320,"Os Bridgertons, vol. 2"],["O duque e eu","Julia Quinn",5.0,"Romance de época",288,"Os Bridgertons, vol. 1"],["Academia de vampiros","Richelle Mead",3.5,"Jovem adulto",336,"Academia de vampiros, vol. 1"],["Aura negra","Richelle Mead",3.5,"Jovem adulto",352,"Academia de vampiros, vol. 2"],["Beijo das sombras","Richelle Mead",3.5,"Jovem adulto",400,"Academia de vampiros, vol. 3"],["Promessa de sangue","Richelle Mead",3.5,"Jovem adulto",432,"Academia de vampiros, vol. 4"],["Laços de espírito","Richelle Mead",3.5,"Jovem adulto",464,"Academia de vampiros, vol. 5"],["Último sacrifício","Richelle Mead",3.5,"Jovem adulto",560,"Academia de vampiros, vol. 6"],["O último olimpiano","Rick Riordan",4.5,"Infantojuvenil",400,"Percy Jackson, vol. 5"],["A batalha do labirinto","Rick Riordan",3.0,"Infantojuvenil",400,"Percy Jackson, vol. 4"],["A maldição do titã","Rick Riordan",4.5,"Infantojuvenil",336,"Percy Jackson, vol. 3"],["O mar de monstros","Rick Riordan",5.0,"Infantojuvenil",304,"Percy Jackson, vol. 2"],["O ladrão de raios","Rick Riordan",4.5,"Infantojuvenil",400,"Percy Jackson, vol. 1"],["Harry Potter e as relíquias da morte","J. K. Rowling",5.0,"Fantasia",592,"Harry Potter, vol. 7"],["Harry Potter e o enigma do príncipe","J. K. Rowling",5.0,"Fantasia",512,"Harry Potter, vol. 6"],["Harry Potter e a Ordem da Fênix","J. K. Rowling",5.0,"Fantasia",704,"Harry Potter, vol. 5"],["Harry Potter e o cálice de fogo","J. K. Rowling",5.0,"Fantasia",584,"Harry Potter, vol. 4"],["Elevador 16","Rodrigo de Oliveira",1.5,"Terror",176,"As crônicas dos mortos"],["Harry Potter e o prisioneiro de Azkaban","J. K. Rowling",5.0,"Fantasia",288,"Harry Potter, vol. 3"],["Revelada","P.C. Cast e Kristin Cast",3.5,"Jovem adulto",368,"House of Night, vol. 11"],["Meninas selvagens","Rory Power",2.5,"Terror",320,""],["Minha sogra é demais","Vanessa Sueroz",3.5,"Romance contemporâneo",240,""],["Romeu e Julieta","William Shakespeare",1.5,"Clássico",176,""],["After: depois da promessa","Anna Todd",3.5,"Romance contemporâneo",672,"After, vol. 5"],["After: depois da esperança","Anna Todd",3.5,"Romance contemporâneo",672,"After, vol. 4"],["Malorie","Josh Malerman",2.0,"Terror",304,"Caixa de pássaros, vol. 2"],["After: depois do desencontro","Anna Todd",3.0,"Romance contemporâneo",560,"After, vol. 3"],["Ratos e homens","John Steinbeck",3.0,"Clássico",144,""],["After: depois da verdade","Anna Todd",3.0,"Romance contemporâneo",592,"After, vol. 2"],["Teto para dois","Beth O'Leary",5.0,"Romance contemporâneo",352,""],["Escondida","P.C. Cast e Kristin Cast",5.0,"Jovem adulto",368,"House of Night, vol. 10"],["A troca","Beth O'Leary",4.5,"Romance contemporâneo",368,""],["Sob a redoma","Stephen King",5.0,"Ficção científica e distopia",960,""],["Como as democracias morrem","Steven Levitsky e Daniel Ziblatt",4.0,"Não ficção",272,""],["Sangue na neve","Lisa Gardner",5.0,"Mistério policial",400,""],["Seres mágicos e histórias sombrias","Neil Gaiman e Al Sarrantonio (org.)",3.5,"Fantasia",416,"Contos"],["Fahrenheit 451","Ray Bradbury",3.0,"Ficção científica e distopia",216,""],["Viva para contar","Lisa Gardner",5.0,"Mistério policial",416,""],["Bella Megera","A. C. Nunes",3.0,"Fantasia",320,"Encantados, vol. 1"],["A menina submersa","Caitlín R. Kiernan",3.5,"Terror",336,""],["Olha o que o amor fez comigo","Trisa",4.0,"Poesia",160,""],["Tenho sérios poemas mentais","Pedro Salomão",5.0,"Poesia",160,""],["Os contos de Beedle, o bardo","J. K. Rowling",5.0,"Fantasia",128,""],["Jane Eyre","Charlotte Brontë",2.5,"Clássico",528,""],["O reverso da medalha","Sidney Sheldon",4.5,"Suspense e thriller",336,""],["Porém bruxa","Carol Chiovatto",4.5,"Fantasia",400,""],["O homem de giz","C. J. Tudor",2.5,"Suspense e thriller",272,""],["República das milícias","Bruno Paes Manso",5.0,"Não ficção",304,""],["Dorian Stone me pertence","Elenice Queiroz Abrahão",4.5,"Romance contemporâneo",320,""],["A convenção das aves","Ransom Riggs",5.0,"Fantasia",416,"O lar da srta. Peregrine, vol. 5"],["Breves respostas para grandes questões","Stephen Hawking",5.0,"Não ficção",256,""],["Agnes Grey","Anne Brontë",3.0,"Clássico",224,""],["Mulherzinhas","Louisa May Alcott",3.5,"Clássico",544,""],["O Senhor dos Anéis","J. R. R. Tolkien",4.5,"Fantasia",1216,"Volume único"],["Um estranho no espelho","Sidney Sheldon",4.0,"Suspense e thriller",336,""],["O morro dos ventos uivantes","Emily Brontë",3.5,"Clássico",352,""],["Frankenstein","Mary Shelley",3.5,"Clássico",304,""],["O Hobbit","J. R. R. Tolkien",4.5,"Fantasia",336,""],["Mapa dos dias","Ransom Riggs",4.5,"Fantasia",480,"O lar da srta. Peregrine, vol. 4"],["A coroa","Kiera Cass",3.5,"Jovem adulto",304,"A seleção, vol. 5"],["A herdeira","Kiera Cass",2.0,"Jovem adulto",392,"A seleção, vol. 4"],["A favorita","Kiera Cass",5.0,"Jovem adulto",96,"A seleção (conto)"],["A rainha","Kiera Cass",4.5,"Jovem adulto",96,"A seleção (conto)"],["O príncipe","Kiera Cass",3.5,"Jovem adulto",96,"A seleção (conto)"],["O guarda","Kiera Cass",3.5,"Jovem adulto",96,"A seleção (conto)"],["A escolha","Kiera Cass",5.0,"Jovem adulto",352,"A seleção, vol. 3"],["A elite","Kiera Cass",3.5,"Jovem adulto",352,"A seleção, vol. 2"],["O caderninho de desafios de Dash & Lily","David Levithan e Rachel Cohn",3.5,"Jovem adulto",272,""],["O que terá acontecido a Baby Jane?","Henry Farrell",4.5,"Suspense e thriller",272,""],["Hex Hall 3: O sacrifício","Rachel Hawkins",5.0,"Jovem adulto",336,"Hex Hall, vol. 3"],["A sereia","Kiera Cass",5.0,"Jovem adulto",336,""],["Por lugares incríveis","Jennifer Niven",5.0,"Jovem adulto",352,""],["A seleção","Kiera Cass",5.0,"Jovem adulto",368,"A seleção, vol. 1"],["Coraline","Neil Gaiman",5.0,"Fantasia",192,""],["Hex Hall 2: A maldição","Rachel Hawkins",5.0,"Jovem adulto",304,"Hex Hall, vol. 2"],["Do átomo ao buraco negro","Schwarza",5.0,"Não ficção",192,""],["A pequena sereia e o reino das ilusões","Louise O'Neill",5.0,"Fantasia",320,""],["Hex Hall 1: Sortilégio","Rachel Hawkins",4.5,"Jovem adulto",304,"Hex Hall, vol. 1"],["O colecionador","John Fowles",3.5,"Suspense e thriller",320,""],["O jardim secreto","Frances Hodgson Burnett",4.0,"Clássico",288,""],["Sem coração","Marissa Meyer",5.0,"Fantasia",448,""],["Harry Potter e a criança amaldiçoada","J. K. Rowling, John Tiffany e Jack Thorne",2.5,"Fantasia",352,"Harry Potter (teatro)"],["A cura da alma feminina","Pe. Adriano Zandoná",null,"Não ficção",192,"Religião"],["Princesa adormecida","Paula Pimenta",null,"Jovem adulto",368,""],["Biblioteca de almas","Ransom Riggs",5.0,"Fantasia",432,"O lar da srta. Peregrine, vol. 3"],["Rangers, ordem dos arqueiros: Ruínas de Gorlan","John Flanagan",null,"Infantojuvenil",304,"Rangers, vol. 1"],["Muito mais que 5inco minutos","Kéfera Buchmann",null,"Não ficção",192,""],["Sangue mágico","Ilona Andrews",null,"Fantasia",304,"Kate Daniels, vol. 1"],["Desperta ao amanhecer","C. C. Hunter",null,"Jovem adulto",400,"Os sobrenaturais, vol. 2"],["Anjos e demônios","Dan Brown",null,"Suspense e thriller",480,"Robert Langdon, vol. 1"],["As crônicas de Nárnia","C. S. Lewis",null,"Fantasia",752,"Volume único"],["A cabana","William P. Young",null,"Ficção literária",240,""],["A garota do lago","Charlie Donlea",5.0,"Suspense e thriller",304,""],["O primeiro dia dos namorados","Audrey Carlan",5.0,"Romance contemporâneo",112,"A garota do calendário (extra)"],["A garota do calendário: Dezembro","Audrey Carlan",5.0,"Romance contemporâneo",176,"A garota do calendário"],["A garota do calendário: Novembro","Audrey Carlan",5.0,"Romance contemporâneo",176,"A garota do calendário"],["Menina má","William March",5.0,"Suspense e thriller",256,""],["A garota do calendário: Outubro","Audrey Carlan",3.5,"Romance contemporâneo",176,"A garota do calendário"],["Lady Killers: assassinas em série","Tori Telfer",5.0,"True crime",288,""],["A garota do calendário: Setembro","Audrey Carlan",5.0,"Romance contemporâneo",176,"A garota do calendário"],["A garota do calendário: Agosto","Audrey Carlan",5.0,"Romance contemporâneo",176,"A garota do calendário"],["A garota do calendário: Julho","Audrey Carlan",3.5,"Romance contemporâneo",176,"A garota do calendário"],["A garota do calendário: Junho","Audrey Carlan",3.5,"Romance contemporâneo",176,"A garota do calendário"],["Admirável mundo novo","Aldous Huxley",4.5,"Ficção científica e distopia",312,""],["A garota do calendário: Maio","Audrey Carlan",3.0,"Romance contemporâneo",176,"A garota do calendário"],["Conte-me seus sonhos","Sidney Sheldon",5.0,"Suspense e thriller",352,""],["A garota do calendário: Abril","Audrey Carlan",4.5,"Romance contemporâneo",176,"A garota do calendário"],["1984","George Orwell",null,"Ficção científica e distopia",416,""],["A garota do calendário: Março","Audrey Carlan",null,"Romance contemporâneo",176,"A garota do calendário"],["Anna vestida de sangue","Kendare Blake",null,"Terror",320,""],["A garota do calendário: Fevereiro","Audrey Carlan",null,"Romance contemporâneo",176,"A garota do calendário"],["Quem tem medo do escuro?","Sidney Sheldon",5.0,"Suspense e thriller",352,""],["A revolução dos bichos","George Orwell",null,"Clássico",152,""],["A voz da sereia volta neste livro","Amanda Lovelace",null,"Poesia",224,""],["A bruxa não vai para a fogueira neste livro","Amanda Lovelace",null,"Poesia",208,""],["Tudo nela brilha e queima","Ryane Leão",null,"Poesia",176,""],["Cidade dos etéreos","Ransom Riggs",null,"Fantasia",352,"O lar da srta. Peregrine, vol. 2"],["A garota do calendário: Janeiro","Audrey Carlan",null,"Romance contemporâneo",176,"A garota do calendário"],["Tudo tem uma primeira vez","Viih Tube",null,"Não ficção",176,""],["Fala sério, mãe!","Thalita Rebouças",null,"Infantojuvenil",176,""],["P.S. Eu te amo","Cecelia Ahern",null,"Romance contemporâneo",400,""],["Destinada","P.C. Cast e Kristin Cast",null,"Jovem adulto",352,"House of Night, vol. 9"],["Como eu era antes de você","Jojo Moyes",null,"Romance contemporâneo",320,""],["Fallen","Lauren Kate",null,"Jovem adulto",368,"Fallen, vol. 1"],["Pra você eu conto","Moacyr Scliar",null,"Infantojuvenil",96,""],["Harry Potter e a câmara secreta","J. K. Rowling",null,"Fantasia",288,"Harry Potter, vol. 2"],["Poderosa: diário de uma garota que tinha o mundo na mão","Sérgio Klein",null,"Infantojuvenil",224,"Poderosa, vol. 1"],["Querido diário otário: é melhor fingir que isso nunca aconteceu","Jim Benton",null,"Infantojuvenil",144,""],["Garotas da Rua Beacon: piores inimigas/melhores amigas","Annie Bryant",null,"Infantojuvenil",176,""],["Uma amiga cheia de segredos","Randi Reisfeld e H. B. Gilmour",null,"Infantojuvenil",160,"Candy Apple"],["Sociedade da Caveira de Cristal","Andréa del Fuego",null,"Infantojuvenil",160,""],["O teorema Katherine","John Green",null,"Jovem adulto",304,""],["O lar da srta. Peregrine para crianças peculiares","Ransom Riggs",null,"Fantasia",352,"O lar da srta. Peregrine, vol. 1"],["Harry Potter e a pedra filosofal","J. K. Rowling",null,"Fantasia",264,"Harry Potter, vol. 1"],["Fingindo ter 19 anos","Alyson Noël",null,"Infantojuvenil",208,""],["Escola de vilões","Jen Calonita",null,"Infantojuvenil",320,""],["Minha vida fora de série: 1ª temporada","Paula Pimenta",null,"Infantojuvenil",384,"Minha vida fora de série, vol. 1"],["Para sempre","Kim e Krickitt Carpenter",null,"Não ficção",208,""],["Anjo da escuridão","Sidney Sheldon e Tilly Bagshawe",null,"Suspense e thriller",352,""],["Poder","Sarah Pinborough",null,"Fantasia",224,"Encantadas, vol. 3"],["Veneno","Sarah Pinborough",null,"Fantasia",224,"Encantadas, vol. 1"],["A droga da obediência","Pedro Bandeira",null,"Infantojuvenil",192,"Os Karas, vol. 1"],["After","Anna Todd",null,"Romance contemporâneo",528,"After, vol. 1"],["A princesa salva a si mesma neste livro","Amanda Lovelace",null,"Poesia",208,""],["Outros jeitos de usar a boca","Rupi Kaur",null,"Poesia",208,""],["Ladrão de almas","Alma Katsu",null,"Fantasia",352,""],["Não se enrola, não","Isabela Freitas",null,"Romance contemporâneo",288,"Não se apega, não, vol. 3"],["Não se apega, não","Isabela Freitas",null,"Romance contemporâneo",240,"Não se apega, não, vol. 1"],["Não se iluda, não","Isabela Freitas",null,"Romance contemporâneo",288,"Não se apega, não, vol. 2"],["Dom Casmurro","Machado de Assis",null,"Clássico",208,""],["Beijada por um anjo 6: Eternamente","Elizabeth Chandler",null,"Jovem adulto",240,"Beijada por um anjo, vol. 6"],["Beijada por um anjo 5: Revelações","Elizabeth Chandler",null,"Jovem adulto",256,"Beijada por um anjo, vol. 5"],["Beijada por um anjo 4: Destinos cruzados","Elizabeth Chandler",null,"Jovem adulto",240,"Beijada por um anjo, vol. 4"],["Beijada por um anjo 3: Almas gêmeas","Elizabeth Chandler",null,"Jovem adulto",208,"Beijada por um anjo, vol. 3"],["Beijada por um anjo 2: A força do amor","Elizabeth Chandler",null,"Jovem adulto",208,"Beijada por um anjo, vol. 2"],["Beijada por um anjo","Elizabeth Chandler",null,"Jovem adulto",208,"Beijada por um anjo, vol. 1"],["Despertada","P.C. Cast e Kristin Cast",null,"Jovem adulto",384,"House of Night, vol. 8"],["Queimada","P.C. Cast e Kristin Cast",null,"Jovem adulto",384,"House of Night, vol. 7"],["Tentada","P.C. Cast e Kristin Cast",null,"Jovem adulto",400,"House of Night, vol. 6"],["Caçada","P.C. Cast e Kristin Cast",null,"Jovem adulto",368,"House of Night, vol. 5"],["Indomada","P.C. Cast e Kristin Cast",null,"Jovem adulto",320,"House of Night, vol. 4"],["Escolhida","P.C. Cast e Kristin Cast",null,"Jovem adulto",320,"House of Night, vol. 3"],["Traída","P.C. Cast e Kristin Cast",null,"Jovem adulto",320,"House of Night, vol. 2"],["Marcada","P.C. Cast e Kristin Cast",4.5,"Jovem adulto",320,"House of Night, vol. 1"]];
+const LCOV = new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 123, 125, 126, 127, 128, 129, 130, 131, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247]);
+
+const LGEN = g => GENRES[g] ? color(g) : `var(${({"Jovem adulto":"--c14","Infantojuvenil":"--c11","Poesia":"--c12","True crime":"--c15","Ficção científica e distopia":"--c13"})[g]||"--c7"})`;
+const LBOOKS = LIDOS.map(([t,a,r,g,p,s],i)=>({i,t,a,r,g,p,s:s||""}));
+const normT = s => s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const LKEYS = new Set(LBOOKS.map(b=>normT(b.t)));
+const serieName = s => s.replace(/,? ?vol\. ?\d+.*$/i,"").replace(/ \((conto|extra|teatro)\)$/,"").trim();
+function allLidos(){
+  const extra = BOOKS.filter(b=>st(b)==="lido"&&!LKEYS.has(normT(b.t))).map(b=>({i:-b.n,t:b.t,a:b.a,r:null,g:b.g,p:b.p,s:b.nota,shelf:b.n}));
+  return [...extra,...LBOOKS];
+}
+const starTxt = r => r==null ? "" : r.toFixed(1).replace(".",",");
+function lidoCover(b){
+  if(b.shelf) return coverHTML(byN(b.shelf));
+  if(LCOV.has(b.i)) return `<div class="cover"><img src="lidos/l${b.i}.jpg" alt="Capa de ${esc(b.t)}" loading="lazy"></div>`;
+  return `<div class="cover" style="background:${LGEN(b.g)}" role="img" aria-label="${esc(b.t)}"><div class="deco"></div><span class="orn">${ORN[b.i%ORN.length]}</span><div class="ct">${esc(b.t)}</div><div class="ca">${esc(b.a)}</div></div>`;
+}
+function myStars(r){
+  if(r==null) return "";
+  return `<span class="stars"><span class="st" style="--pct:${r/5*100}%">★★★★★</span>${starTxt(r)}</span>`;
+}
+function openLido(key){
+  const b=allLidos().find(x=>String(x.i)===String(key)); if(!b) return;
+  if(b.shelf){ openFicha(b.shelf); return; }
+  const d=$("#ficha");
+  d.innerHTML=`<div class="ficha-in"><div>${lidoCover(b)}</div><div style="min-width:0">
+    <div class="eyebrow">${esc(b.g)}</div><h3 id="f-title">${esc(b.t)}</h3>
+    <div class="by">${esc(b.a)}${b.s?" · "+esc(b.s):""}</div>
+    <div class="chips"><span class="chip">${b.p} páginas</span><span class="chip">Lido</span></div>
+    <div class="rating-box">${b.r!=null?`<span class="big num">${starTxt(b.r)}</span>${myStars(b.r).replace(/>[\d,]+<\/span>$/,"></span>")}<small>a minha nota no Skoob</small>`:`<small>Sem nota no Skoob</small>`}</div>
+  </div></div><button class="close" aria-label="Fechar">×</button>`;
+  d.querySelector(".close").onclick=()=>d.close();
+  if(!d.open) d.showModal();
+}
+function barsHTML(rows,max,col){
+  return rows.map(([k,v,tip])=>`<div class="bar" title="${esc(tip||"")}"><span>${esc(k)}</span><div class="track"><div class="fill" style="width:${v/max*100}%;background:${col(k)}"></div></div><span class="n num">${v} ${v===1?"livro":"livros"}</span></div>`).join("");
+}
+function histHTML(el,lab,counts,labels){
+  const hm=Math.max(1,...counts);
+  $(el).innerHTML=counts.map(c=>`<div class="col"><b class="num">${c}</b><i style="height:${c/hm*100}%"></i></div>`).join("");
+  $(lab).innerHTML=labels.map(l=>`<span>${l}</span>`).join("");
+}
+function renderLidos(){
+  const L=allLidos(), pages=L.reduce((s,b)=>s+b.p,0), rated=L.filter(b=>b.r!=null);
+  const avg=rated.length?rated.reduce((s,b)=>s+b.r,0)/rated.length:0;
+  const authors={}; L.forEach(b=>{const a=b.a.replace(/ \(org\.\)$/,""); authors[a]=(authors[a]||0)+1;});
+  const series={}; L.forEach(b=>{if(b.s&&/vol\.|calendário|seleção/i.test(b.s)){const k=serieName(b.s); series[k]=(series[k]||0)+1;}});
+  $("#lh-n").textContent=fmt(L.length); $("#lh-p").textContent=fmt(pages);
+  $("#lh-sub").textContent=`Dá umas ${fmt(Math.round(pages/30))} horas de leitura, lendo 30 páginas por hora, e uma pilha de uns ${fmt(Math.round(pages*0.0001*10)/10)} metros de papel.`;
+  const five=L.filter(b=>b.r===5).length;
+  $("#l-tiles").innerHTML=`
+    <div class="tile"><div class="v num">${fmt(L.length)}</div><div class="l">livros lidos</div></div>
+    <div class="tile"><div class="v num">${fmt(pages)}</div><div class="l">páginas lidas</div></div>
+    <div class="tile"><div class="v num">${Math.round(pages/L.length)}</div><div class="l">páginas por livro, em média</div></div>
+    <div class="tile"><div class="v num">${starTxt(avg)}</div><div class="l">minha nota média · ${five} livros com 5 estrelas</div></div>`;
+  const byG={}; L.forEach(b=>{(byG[b.g]=byG[b.g]||{n:0,p:0}); byG[b.g].n++; byG[b.g].p+=b.p;});
+  const gr=Object.entries(byG).sort((a,b)=>b[1].n-a[1].n);
+  $("#l-genres").innerHTML=barsHTML(gr.map(([g,v])=>[g,v.n,`${fmt(v.p)} páginas`]),gr[0][1].n,LGEN);
+  const ar=Object.entries(authors).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],"pt")).slice(0,8);
+  $("#l-authors").innerHTML=barsHTML(ar.map(([a,n])=>[a,n]),ar[0][1],()=>"var(--pink)");
+  const nb=[[0,1.5],[2,2.5],[3,3.5],[4,4.5],[5,5]];
+  histHTML("#l-notas","#l-notas-labels",nb.map(([lo,hi])=>rated.filter(b=>b.r>=lo&&b.r<=hi).length),["até 1,5","2 a 2,5","3 a 3,5","4 a 4,5","5"]);
+  $("#l-notas-info").innerHTML=`<span>${rated.length} livros com nota, ${L.length-rated.length} sem nota.</span>`+(()=>{const s=[...rated].sort((a,b)=>a.r-b.r);return s.length?`<span>Nota mais baixa: <strong>${esc(s[0].t)}</strong> (${starTxt(s[0].r)})</span>`:""})();
+  const bins=[[0,200,"até 200"],[201,300,"201–300"],[301,400,"301–400"],[401,500,"401–500"],[501,99999,"500+"]];
+  histHTML("#l-hist","#l-hist-labels",bins.map(([lo,hi])=>L.filter(b=>b.p>=lo&&b.p<=hi).length),bins.map(b=>b[2]));
+  const sp=[...L].sort((a,b)=>a.p-b.p);
+  $("#l-extremes").innerHTML=`<span>Mais curtinho: <strong>${esc(sp[0].t)}</strong> (${sp[0].p} pág.)</span><span>Mais longo: <strong>${esc(sp.at(-1).t)}</strong> (${sp.at(-1).p} pág.)</span>`;
+  $("#l-series").innerHTML=Object.entries(series).filter(e=>e[1]>=3).sort((a,b)=>b[1]-a[1]).map(([k,n])=>`<span>${esc(k)}<b class="num">${n}</b></span>`).join("");
+  renderLGrid();
+}
+function renderLGrid(){
+  const q=normT($("#lq").value), g=$("#ll-genero").value, nt=$("#ll-nota").value, o=$("#ll-ordem").value;
+  const rows=allLidos().filter(b=>(!q||normT(b.t+" "+b.a+" "+b.s).includes(q))&&(!g||b.g===g)&&(
+    !nt||(nt==="5"?b.r===5:nt==="4"?b.r>=4:nt==="-3"?(b.r!=null&&b.r<=3):b.r==null)));
+  const cmp={i:(a,b)=>a.i-b.i,"i-":(a,b)=>b.i-a.i,t:(a,b)=>a.t.localeCompare(b.t,"pt"),a:(a,b)=>a.a.localeCompare(b.a,"pt")||a.t.localeCompare(b.t,"pt"),r:(a,b)=>(b.r??-1)-(a.r??-1)||a.i-b.i,"p-":(a,b)=>b.p-a.p,"p+":(a,b)=>a.p-b.p}[o];
+  rows.sort(cmp);
+  $("#l-grid").innerHTML=rows.map(b=>`<article class="card">
+    <button class="open" data-lido="${b.i}" aria-label="Ver ficha de ${esc(b.t)}"><div style="position:relative">${lidoCover(b)}${b.shelf?'<span class="tag shelf">da estante</span>':""}</div>
+    <div class="t">${esc(b.t)}</div><div class="a">${esc(b.a)}${b.s?" · "+esc(b.s):""}</div></button>
+    <div class="foot"><span class="pg num">${b.p} pág.</span><span class="mine ${b.r==null?"none":""}">${b.r==null?"sem nota":"★ "+starTxt(b.r)}</span></div></article>`).join("") || '<div class="empty">Nenhum livro com esses filtros.</div>';
+}
+(()=>{
+  const gs=[...new Set(LBOOKS.map(b=>b.g).concat(BOOKS.map(b=>b.g)))].sort((a,b)=>a.localeCompare(b,"pt"));
+  $("#ll-genero").innerHTML='<option value="">Todos</option>'+gs.map(g=>`<option>${esc(g)}</option>`).join("");
+  ["#lq","#ll-genero","#ll-nota","#ll-ordem"].forEach(s=>$(s).addEventListener("input",renderLGrid));
+  $("#l-grid").addEventListener("click",e=>{const ob=e.target.closest("[data-lido]"); if(ob) openLido(ob.dataset.lido);});
+  const TABK="estante-aba";
+  const show=t=>{
+    ["estante","lidos"].forEach(k=>{$("#view-"+k).hidden=k!==t; $("#tab-"+k).setAttribute("aria-selected",String(k===t));});
+    try{localStorage.setItem(TABK,t)}catch{}
+  };
+  $("#tab-estante").onclick=()=>show("estante"); $("#tab-lidos").onclick=()=>show("lidos");
+  let t0="estante"; try{t0=localStorage.getItem(TABK)||"estante"}catch{}
+  show(t0==="lidos"?"lidos":"estante");
+})();
+
 const LS="estante-status-v1", LSC="estante-capas-v1";
 function load(k){try{return JSON.parse(localStorage.getItem(k)||"{}")}catch{return {}}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch{return false}}
